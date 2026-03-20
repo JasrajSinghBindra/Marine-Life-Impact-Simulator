@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Marine Simulator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&family=Inter:wght@400;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+  <h2 class="logo">OceanSim</h2>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="simulator.html" class="active">Simulator</a>
+    <a href="credits.html">Credits</a>
+  </div>
+</nav>
+<div class="frame">
+
+  <div class="bg-image"></div>
+
+  <div class="species-panel" id="speciesPanel">
+    <div class="species-scroll-inner">
+
+      <div class="species-info-bar" id="speciesInfoBar">
+        <div class="species-name" id="speciesName"></div>
+        <div class="species-scientific" id="speciesScientific"></div>
+        <div class="species-meta" id="speciesMeta"></div>
+        <div class="status-badge" id="statusBadge"></div>
+      </div>
+
+      <div class="animal-and-stats" id="animalAndStats">
+        <img class="species-image" id="speciesImage" src="" alt=""/>
+        <div class="stat-box pop-health" id="popHealthBox">
+          <div class="stat-label">population health</div>
+          <div class="red-track">
+            <div class="red-fill" id="popHealthFill" style="width:100%">
+              <div class="red-thumb"></div>
+            </div>
+          </div>
+        </div>
+        <div class="stat-box mortality" id="mortalityBox">
+          <div class="stat-label">mortality rate</div>
+          <div class="red-track">
+            <div class="red-fill" id="mortalityFill" style="width:0%">
+              <div class="red-thumb"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="results-bar" id="resultsBar">
+        <div class="results-title">Simulation Results</div>
+        <div id="resultsContent"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="left-side">
+    <div class="panel-outer"></div>
+    <div class="panel-inner"></div>
+
+    <div class="dropdown-wrapper">
+      <div class="dropdown-selected" id="dropdownSelected" onclick="toggleDropdown()">
+        <span id="dropdownLabel">Select Marine Species</span>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="dropdown-list" id="dropdownList">
+        <div class="dropdown-item" onclick="selectSpecies(this, 'blue-whale')">Blue Whale</div>
+        <div class="dropdown-item" onclick="selectSpecies(this, 'seahorse')">Seahorse</div>
+        <div class="dropdown-item" onclick="selectSpecies(this, 'hawksbill-sea-turtle')">Hawksbill Sea Turtle</div>
+        <div class="dropdown-item" onclick="selectSpecies(this, 'manta-ray')">Manta Ray</div>
+        <div class="dropdown-item" onclick="selectSpecies(this, 'staghorn-coral')">Staghorn Coral</div>
+        <div class="dropdown-item" onclick="selectSpecies(this, 'narwhal')">Narwhal</div>
+      </div>
+    </div>
+
+    <div class="slider-wrap s1">
+      <input type="range" id="slider-intensity" min="0" max="100" value="30" oninput="updateRedSliders()"/>
+    </div>
+    <div class="slider-label label-intensity">INTENSITY</div>
+
+    <div class="slider-wrap s2">
+      <input type="range" id="slider-timeline" min="0" max="10" value="3" oninput="updateRedSliders()"/>
+    </div>
+    <div class="slider-label label-timeline">TIMELINE</div>
+
+    <button class="threat-btn col1 row1" onclick="toggleThreat(this)">
+      <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="6" width="16" height="13" rx="3" stroke="#1888A8" stroke-width="2.2" fill="none"/>
+        <path d="M20 16 L12 36 Q10 44 18 46 L38 46 Q46 44 44 36 L36 16Z" stroke="#1888A8" stroke-width="2.2" fill="rgba(96,200,224,0.15)"/>
+        <circle cx="22" cy="33" r="3" fill="#60C8E0" opacity="0.7"/>
+        <circle cx="32" cy="38" r="2" fill="#60C8E0" opacity="0.5"/>
+        <circle cx="36" cy="29" r="2.5" fill="#60C8E0" opacity="0.6"/>
+        <path d="M28 6 L28 2 M24 2 L32 2" stroke="#1888A8" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>chemical spill</span>
+    </button>
+
+    <button class="threat-btn col2 row1" onclick="toggleThreat(this)">
+      <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="22" y="4" width="12" height="6" rx="2" stroke="#1888A8" stroke-width="2" fill="none"/>
+        <rect x="20" y="9" width="16" height="16" rx="3" stroke="#1888A8" stroke-width="2.2" fill="none"/>
+        <path d="M16 25 L14 44 L42 44 L40 25Z" stroke="#1888A8" stroke-width="2.2" fill="rgba(96,200,224,0.15)"/>
+        <ellipse cx="28" cy="44" rx="16" ry="5" stroke="#1888A8" stroke-width="1.5" fill="rgba(10,72,104,0.18)"/>
+        <path d="M20 36 Q25 32 30 36 Q35 40 40 36" stroke="#1888A8" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+      </svg>
+      <span>oil spill</span>
+    </button>
+
+    <button class="threat-btn col3 row1" onclick="toggleThreat(this)">
+      <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="28" cy="28" r="5" fill="#1888A8"/>
+        <path d="M19 19 Q11 28 19 37" stroke="#1888A8" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        <path d="M37 19 Q45 28 37 37" stroke="#1888A8" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        <path d="M13 13 Q3 28 13 43" stroke="#60C8E0" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.65"/>
+        <path d="M43 13 Q53 28 43 43" stroke="#60C8E0" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.65"/>
+      </svg>
+      <span>sonar</span>
+    </button>
+
+    <button class="threat-btn col1 row2" onclick="toggleThreat(this)">
+      <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="26" cy="30" r="16" stroke="#1888A8" stroke-width="2.2" fill="rgba(96,200,224,0.10)"/>
+        <path d="M26 14 Q33 22 33 30 Q33 38 26 46 Q19 38 19 30 Q19 22 26 14Z" stroke="#1888A8" stroke-width="1.5" fill="rgba(96,200,224,0.15)"/>
+        <path d="M10 30 L42 30" stroke="#1888A8" stroke-width="1.5" stroke-linecap="round"/>
+        <rect x="44" y="12" width="7" height="22" rx="3.5" stroke="#1888A8" stroke-width="1.8" fill="none"/>
+        <rect x="45.5" y="22" width="4" height="12" rx="2" fill="#60C8E0"/>
+        <circle cx="47.5" cy="36" r="4" fill="#60C8E0" stroke="#1888A8" stroke-width="1.5"/>
+      </svg>
+      <span>global warming</span>
+    </button>
+
+    <button class="threat-btn col2 row2" onclick="toggleThreat(this)">
+      <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="23" y="4" width="10" height="7" rx="2" stroke="#1888A8" stroke-width="2" fill="none"/>
+        <path d="M22 10 L22 17 L17 22 L17 44 Q17 48 22 48 L34 48 Q39 48 39 44 L39 22 L34 17 L34 10Z" stroke="#1888A8" stroke-width="2.2" fill="rgba(96,200,224,0.12)"/>
+        <path d="M20 30 Q24 27 28 30 Q32 33 36 30" stroke="#1888A8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+        <path d="M20 37 Q24 34 28 37 Q32 40 36 37" stroke="#1888A8" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+      </svg>
+      <span>plastic</span>
+    </button>
+
+    <button class="threat-btn col3 row2" onclick="toggleThreat(this)">
+      <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 14 Q28 8 48 14" stroke="#1888A8" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        <path d="M10 16 L10 46 L46 46 L46 16Z" stroke="#1888A8" stroke-width="2" fill="rgba(96,200,224,0.10)"/>
+        <line x1="10" y1="26" x2="46" y2="26" stroke="#1888A8" stroke-width="1.2" opacity="0.5"/>
+        <line x1="10" y1="36" x2="46" y2="36" stroke="#1888A8" stroke-width="1.2" opacity="0.5"/>
+        <line x1="22" y1="16" x2="22" y2="46" stroke="#1888A8" stroke-width="1.2" opacity="0.5"/>
+        <line x1="34" y1="16" x2="34" y2="46" stroke="#1888A8" stroke-width="1.2" opacity="0.5"/>
+        <ellipse cx="28" cy="31" rx="7" ry="4" fill="#1888A8" opacity="0.28"/>
+        <path d="M35 31 L41 28 L41 34 Z" fill="#1888A8" opacity="0.28"/>
+        <circle cx="24" cy="30" r="1.3" fill="#1888A8" opacity="0.7"/>
+      </svg>
+      <span>overfishing</span>
+    </button>
+
+    <button class="run-btn" onclick="runSimulator()">RUN SIMULATOR</button>
+
+  </div>
+
+</div>
+<script src="script.js"></script>
+</body>
+</html>
