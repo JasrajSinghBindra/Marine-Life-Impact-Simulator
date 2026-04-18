@@ -11,10 +11,12 @@
   <nav class="navbar">
   <h2 class="logo">OceanSim</h2>
   <div class="nav-links">
-    <a href="index.html">Home</a>
-    <a href="simulator.html" class="active">Simulator</a>
-    <a href="credits.html">Credits</a>
-  </div>
+  <a href="index.html">Home</a>
+  <a href="simulator.html" class="active">Simulator</a>
+  <a href="credits.html">Credits</a>
+  <a href="login.html?logout=1" id="logoutBtn">Logout</a>
+
+</div>
 </nav>
 <div class="frame">
 
@@ -31,7 +33,9 @@
       </div>
 
       <div class="animal-and-stats" id="animalAndStats">
-        <img class="species-image" id="speciesImage" src="" alt=""/>
+        <div class="species-image-wrapper" id="speciesImageWrapper">
+          <img class="species-image" id="speciesImage" src="" alt=""/>
+        </div>
         <div class="stat-box pop-health" id="popHealthBox">
           <div class="stat-label">population health</div>
           <div class="red-track">

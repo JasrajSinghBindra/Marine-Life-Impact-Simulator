@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register — OceanSim</title>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style-auth.css"/>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<nav class="navbar">
+  <h2 class="logo">OceanSim</h2>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="simulator.html">Simulator</a>
+    <a href="credits.html">Credits</a>
+    <a href="login.html">Login</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="card">
+
+    <div id="formState">
+      <div class="card-title">Create Account</div>
+      <div class="card-sub">Join OceanSim and start exploring marine ecosystems</div>
+
+      <div class="global-error" id="globalError"></div>
+
+      <form id="registerForm" onsubmit="handleRegister(event)" novalidate>
+        <div class="field">
+          <label>Username</label>
+          <input type="text" id="username" placeholder="Choose a username" autocomplete="username"/>
+          <div class="field-error" id="usernameError"></div>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="email" placeholder="Enter your email" autocomplete="email"/>
+          <div class="field-error" id="emailError"></div>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="Create a password" autocomplete="new-password" oninput="checkStrength()"/>
+          <div class="strength-bar" id="strengthBar">
+            <div class="strength-track">
+              <div class="strength-fill" id="strengthFill"></div>
+            </div>
+            <div class="strength-label" id="strengthLabel"></div>
+          </div>
+          <div class="field-error" id="passwordError"></div>
+        </div>
+        <div class="field">
+          <label>Confirm Password</label>
+          <input type="password" id="confirmPassword" placeholder="Repeat your password" autocomplete="new-password"/>
+          <div class="field-error" id="confirmError"></div>
+        </div>
+        <button type="submit" class="submit-btn">Create Account</button>
+      </form>
+
+      <div class="divider"><span>or</span></div>
+      <div class="switch">Already have an account? <a href="login.html">Sign in</a></div>
+    </div>
+
+    <div class="success-state" id="successState">
+      <div class="success-icon">🌊</div>
+      <h3>Account Created!</h3>
+      <p>Welcome to OceanSim. You can now sign in and start simulating.</p>
+      <button class="submit-btn" onclick="window.location.href='login.html'">Go to Login</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="register.js"></script>
+</body>
+</html>

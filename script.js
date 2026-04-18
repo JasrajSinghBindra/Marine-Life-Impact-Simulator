@@ -91,9 +91,12 @@ function selectSpecies(el, value) {
 
 document.addEventListener('click', function(e) {
   const wrapper = document.querySelector('.dropdown-wrapper');
+  const selected = document.getElementById('dropdownSelected');
+  const list = document.getElementById('dropdownList');
+  if (!wrapper || !selected || !list) return;
   if (!wrapper.contains(e.target)) {
-    document.getElementById('dropdownSelected').classList.remove('open');
-    document.getElementById('dropdownList').classList.remove('open');
+    selected.classList.remove('open');
+    list.classList.remove('open');
   }
 });
 
@@ -111,21 +114,31 @@ function updateRedSliders() {
   document.getElementById('mortalityFill').style.width = Math.min(100, impact) + '%';
 }
 
-document.querySelectorAll('input[type=range]').forEach(s => {
-  updateSlider(s);
-  s.addEventListener('input', () => { updateSlider(s); updateRedSliders(); });
-});
-
+if (document.querySelector('.slider-wrap')) {
+  document.querySelectorAll('input[type=range]').forEach(s => {
+    updateSlider(s);
+    s.addEventListener('input', () => { updateSlider(s); updateRedSliders(); });
+  });
+}
 function toggleThreat(btn) {
   btn.classList.toggle('active');
   const active = document.querySelectorAll('.threat-btn.active').length;
   if (active > 0) {
+    const label = btn.querySelector('span').textContent.toLowerCase().trim();
+    if (btn.classList.contains('active') && label === 'plastic') spawnPlastic();
+    if (btn.classList.contains('active') && label === 'sonar') spawnSonar();
+    if (btn.classList.contains('active') && label === 'overfishing') spawnNet();
+    if (btn.classList.contains('active') && label === 'global warming') spawnWarming();
+    if (btn.classList.contains('active') && label === 'chemical spill') spawnChemical();
+    if (btn.classList.contains('active') && label === 'oil spill') spawnOil();
     document.getElementById('popHealthBox').classList.add('visible');
     document.getElementById('mortalityBox').classList.add('visible');
+    document.getElementById('speciesImageWrapper').classList.add('shifted');
     updateRedSliders();
   } else {
     document.getElementById('popHealthBox').classList.remove('visible');
     document.getElementById('mortalityBox').classList.remove('visible');
+    document.getElementById('speciesImageWrapper').classList.remove('shifted');
   }
 }
 
@@ -166,4 +179,88 @@ function runSimulator() {
     const panel = document.getElementById('speciesPanel');
     panel.scrollTo({ top: panel.scrollHeight + 1000, behavior: 'smooth' });
   }, 400);
+}
+function spawnPlastic() {
+  const images = ['plastic1.png', 'plastic2.png', 'plastic3.png'];
+  const panel = document.getElementById('speciesPanel');
+  const panelWidth = panel.offsetWidth;
+
+  for (let i = 0; i < 28; i++) {
+    const piece = document.createElement('div');
+    piece.classList.add('plastic-piece');
+    const size = 35 + Math.random() * 70;
+    piece.style.width = size + 'px';
+    piece.style.height = size + 'px';
+    piece.style.left = (Math.random() * (panelWidth - size)) + 'px';
+    piece.style.top = '-80px';
+    piece.style.backgroundImage = `url('${images[Math.floor(Math.random() * images.length)]}')`;
+    piece.style.animationDuration = (3 + Math.random() * 4) + 's';
+    piece.style.animationDelay = (Math.random() * 2.5) + 's';
+    panel.appendChild(piece);
+    piece.addEventListener('animationend', () => piece.remove());
+  }
+}
+
+function spawnSonar() {
+  const panel = document.getElementById('speciesPanel');
+  const centerX = panel.offsetWidth / 2;
+  const centerY = panel.offsetHeight / 2;
+
+  for (let i = 0; i < 6; i++) {
+    const wave = document.createElement('div');
+    wave.classList.add('sonar-wave');
+    wave.style.width = '80px';
+    wave.style.height = '80px';
+    wave.style.left = centerX + 'px';
+    wave.style.top = centerY + 'px';
+    wave.style.animationDelay = (i * 0.4) + 's';
+    panel.appendChild(wave);
+    wave.addEventListener('animationend', () => wave.remove());
+  }
+}
+
+function spawnNet() {
+  const panel = document.getElementById('speciesPanel');
+  const net = document.createElement('div');
+  net.classList.add('net-piece');
+  panel.appendChild(net);
+  net.addEventListener('animationend', () => net.remove());
+}
+
+function spawnWarming() {
+  const panel = document.getElementById('speciesPanel');
+  const overlay = document.createElement('div');
+  overlay.classList.add('warming-overlay');
+  panel.appendChild(overlay);
+  overlay.addEventListener('animationend', () => overlay.remove());
+}
+
+function spawnOil() {
+  const panel = document.getElementById('speciesPanel');
+  const slick = document.createElement('div');
+  slick.classList.add('oil-slick');
+  panel.appendChild(slick);
+  slick.addEventListener('animationend', () => slick.remove());
+}
+
+function spawnChemical() {
+  const panel = document.getElementById('speciesPanel');
+  for (let i = 0; i < 30; i++) {
+    const bubble = document.createElement('div');
+    bubble.classList.add('chem-bubble');
+    const size = 10 + Math.random() * 40;
+    bubble.style.width = size + 'px';
+    bubble.style.height = size + 'px';
+    bubble.style.left = (Math.random() * 98) + '%';
+    bubble.style.top = '-50px';
+    bubble.style.animationDuration = (3 + Math.random() * 4) + 's';
+    bubble.style.animationDelay = (Math.random() * 3) + 's';
+    panel.appendChild(bubble);
+    bubble.addEventListener('animationend', () => bubble.remove());
+  }
+}
+
+const logoutBtn = document.getElementById('logoutBtn');
+if (sessionStorage.getItem('oceansim_user') && logoutBtn) {
+  logoutBtn.style.display = 'inline';
 }
