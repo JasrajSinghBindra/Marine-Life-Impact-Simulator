@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — OceanSim</title>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style-auth.css"/>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<nav class="navbar">
+  <h2 class="logo">OceanSim</h2>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="simulator.html">Simulator</a>
+    <a href="credits.html">Credits</a>
+    <a href="login.html" class="active">Login</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="card">
+    <div class="card-title">Welcome Back</div>
+    <div class="card-sub">Sign in to your OceanSim account</div>
+
+    <div class="global-error" id="globalError"></div>
+    <div class="lock-notice" id="lockNotice">🔒 Account locked due to too many failed attempts. Please reset your password.</div>
+
+    <form id="loginForm" onsubmit="handleLogin(event)" novalidate>
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="username" placeholder="Enter your username" autocomplete="username"/>
+        <div class="field-error" id="usernameError">Username is required</div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password"/>
+        <div class="field-error" id="passwordError">Password is required</div>
+      </div>
+      <div class="forgot">
+        <a href="#" onclick="showResetModal()">Forgot password?</a>
+      </div>
+      <button type="submit" class="submit-btn">Sign In</button>
+    </form>
+
+    <div class="divider"><span>or</span></div>
+    <div class="switch">Don't have an account? <a href="register.html">Register here</a></div>
+  </div>
+</div>
+
+<!-- Reset Modal -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal">
+    <h3>Reset Password</h3>
+    <p>Enter your username and we'll help you reset your password.</p>
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="resetUsername" placeholder="Enter your username"/>
+    </div>
+    <button class="modal-btn" onclick="handleReset()">Send Reset Link</button>
+    <button class="modal-btn modal-btn-cancel" onclick="closeResetModal()">Cancel</button>
+  </div>
+</div>
+
+<script src="login.js"></script>
+</body>
+</html>
