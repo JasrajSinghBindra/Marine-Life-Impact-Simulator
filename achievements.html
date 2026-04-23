@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Achievements — OceanSim</title>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <h2 class="logo">OceanSim</h2>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="simulator.html">Simulator</a>
+    <a href="leaderboard.html">Leaderboard</a>
+    <a href="achievements.html" class="active">Achievements</a>
+    <a href="history.html">History</a>
+    <a href="credits.html">Credits</a>
+    <a href="login.html" id="authLink">Login</a>
+  </div>
+</nav>
+
+<!-- PAGE CONTENT -->
+<div class="page">
+  <div class="data-page-card">
+    <div class="data-page-header">
+      <div class="data-page-icon">🏅</div>
+      <h1 class="data-page-title">Achievements</h1>
+      <p class="data-page-sub">Track your ocean conservation milestones</p>
+    </div>
+
+    <!-- Login required -->
+    <div id="achieveLoginMsg" class="data-login-required" style="display:none;">
+      <div class="data-empty-icon">🔒</div>
+      <p>Please log in to view your achievements</p>
+      <a href="login.html" class="data-action-btn">Sign In</a>
+    </div>
+
+    <!-- Loading state -->
+    <div id="achieveLoading" class="data-loading">
+      <div class="data-spinner"></div>
+      <p>Loading achievements...</p>
+    </div>
+
+    <!-- Achievements grid -->
+    <div id="achieveGrid" class="achieve-grid" style="display:none;">
+    </div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// Achievements page — show all achievements with locked/unlocked state
+// =============================================
+
+// All possible achievements definition
+const allAchievements = [
+  { key: 'first_game', name: 'First Dive',       icon: '🤿', desc: 'Play your first Ocean Doctor game' },
+  { key: 'score_100',  name: 'Ocean Cleaner',    icon: '🧹', desc: 'Score over 100 points in a single game' },
+  { key: 'score_500',  name: 'Ocean Guardian',   icon: '🛡️', desc: 'Score over 500 points in a single game' },
+  { key: 'score_1000', name: 'Marine Hero',      icon: '🦸', desc: 'Score over 1000 points in a single game' },
+  { key: 'ten_games',  name: 'Dedicated Diver',  icon: '🏊', desc: 'Play 10 Ocean Doctor games' }
+];
+
+// Check auth
+fetch('check_session.php')
+  .then(r => r.json())
+  .then(data => {
+    const authLink = document.getElementById('authLink');
+    if (data.loggedIn) {
+      authLink.textContent = 'Logout';
+      authLink.href = 'logout.php';
+      loadAchievements();
+    } else {
+      document.getElementById('achieveLoading').style.display = 'none';
+      document.getElementById('achieveLoginMsg').style.display = 'block';
+    }
+  })
+  .catch(() => {
+    document.getElementById('achieveLoading').style.display = 'none';
+    document.getElementById('achieveLoginMsg').style.display = 'block';
+  });
+
+function loadAchievements() {
+  fetch('achievements_api.php')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('achieveLoading').style.display = 'none';
+      document.getElementById('achieveGrid').style.display = 'grid';
+
+      const unlockedKeys = new Set();
+      const unlockedDates = {};
+      if (data.success && data.achievements) {
+        data.achievements.forEach(a => {
+          unlockedKeys.add(a.key);
+          unlockedDates[a.key] = a.unlocked_at;
+        });
+      }
+
+      const grid = document.getElementById('achieveGrid');
+      allAchievements.forEach(a => {
+        const unlocked = unlockedKeys.has(a.key);
+        const card = document.createElement('div');
+        card.className = 'achieve-card' + (unlocked ? ' unlocked' : ' locked');
+
+        const dateStr = unlocked
+          ? new Date(unlockedDates[a.key]).toLocaleDateString()
+          : '';
+
+        card.innerHTML = `
+          <div class="achieve-icon">${unlocked ? a.icon : '🔒'}</div>
+          <div class="achieve-name">${a.name}</div>
+          <div class="achieve-desc">${a.desc}</div>
+          ${unlocked ? `<div class="achieve-date">Unlocked ${dateStr}</div>` : '<div class="achieve-date">Locked</div>'}
+        `;
+        grid.appendChild(card);
+      });
+    })
+    .catch(() => {
+      document.getElementById('achieveLoading').innerHTML =
+        '<p style="color:#f05050;">Failed to load achievements.</p>';
+    });
+}
+</script>
+</body>
+</html>
