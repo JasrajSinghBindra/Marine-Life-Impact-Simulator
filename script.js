@@ -91,12 +91,9 @@ function selectSpecies(el, value) {
 
 document.addEventListener('click', function(e) {
   const wrapper = document.querySelector('.dropdown-wrapper');
-  const selected = document.getElementById('dropdownSelected');
-  const list = document.getElementById('dropdownList');
-  if (!wrapper || !selected || !list) return;
   if (!wrapper.contains(e.target)) {
-    selected.classList.remove('open');
-    list.classList.remove('open');
+    document.getElementById('dropdownSelected').classList.remove('open');
+    document.getElementById('dropdownList').classList.remove('open');
   }
 });
 
@@ -114,12 +111,11 @@ function updateRedSliders() {
   document.getElementById('mortalityFill').style.width = Math.min(100, impact) + '%';
 }
 
-if (document.querySelector('.slider-wrap')) {
-  document.querySelectorAll('input[type=range]').forEach(s => {
-    updateSlider(s);
-    s.addEventListener('input', () => { updateSlider(s); updateRedSliders(); });
-  });
-}
+document.querySelectorAll('input[type=range]').forEach(s => {
+  updateSlider(s);
+  s.addEventListener('input', () => { updateSlider(s); updateRedSliders(); });
+});
+
 function toggleThreat(btn) {
   btn.classList.toggle('active');
   const active = document.querySelectorAll('.threat-btn.active').length;
@@ -260,7 +256,534 @@ function spawnChemical() {
   }
 }
 
-const logoutBtn = document.getElementById('logoutBtn');
-if (sessionStorage.getItem('oceansim_user') && logoutBtn) {
-  logoutBtn.style.display = 'inline';
+// =============================================
+// LOGIN PAGE CODE — only runs if login elements exist
+// =============================================
+if (document.getElementById('loginForm')) {
+
+window.handleLogin = function(e) {
+  e.preventDefault();
+
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  let valid = true;
+
+  if (!username) {
+    document.getElementById('usernameError').classList.add('show');
+    document.getElementById('username').classList.add('error');
+    valid = false;
+  } else {
+    document.getElementById('usernameError').classList.remove('show');
+    document.getElementById('username').classList.remove('error');
+  }
+  if (!password) {
+    document.getElementById('passwordError').classList.add('show');
+    document.getElementById('password').classList.add('error');
+    valid = false;
+  } else {
+    document.getElementById('passwordError').classList.remove('show');
+    document.getElementById('password').classList.remove('error');
+  }
+  if (!valid) return;
+
+  // Send to backend login.php
+  fetch('login.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      sessionStorage.setItem('oceansim_user', data.username);
+      window.location.href = 'simulator.html';
+    } else if (data.locked) {
+      document.getElementById('lockNotice').classList.add('show');
+      document.getElementById('globalError').classList.remove('show');
+    } else {
+      showError(data.message || 'Login failed');
+    }
+  })
+  .catch(() => {
+    showError('Could not connect to server');
+  });
+};
+
+window.showError = function(msg) {
+  const el = document.getElementById('globalError');
+  el.textContent = msg;
+  el.classList.add('show');
+};
+
+window.showResetModal = function() {
+  document.getElementById('resetModal').classList.add('show');
+};
+
+window.closeResetModal = function() {
+  document.getElementById('resetModal').classList.remove('show');
+};
+
+window.handleReset = function() {
+  const u = document.getElementById('resetUsername').value.trim();
+  if (!u) return;
+  closeResetModal();
+  showError('Password reset link sent! Check your inbox.');
+};
+
+const params = new URLSearchParams(window.location.search);
+if (params.get('logout') === '1') {
+  sessionStorage.removeItem('oceansim_user');
+}
+
+document.getElementById('username').addEventListener('input', () => {
+  document.getElementById('usernameError').classList.remove('show');
+  document.getElementById('username').classList.remove('error');
+  document.getElementById('globalError').classList.remove('show');
+});
+document.getElementById('password').addEventListener('input', () => {
+  document.getElementById('passwordError').classList.remove('show');
+  document.getElementById('password').classList.remove('error');
+  document.getElementById('globalError').classList.remove('show');
+});
+
+} // end loginForm guard
+
+// =============================================
+// REGISTER PAGE CODE — only runs if register elements exist
+// =============================================
+if (document.getElementById('registerForm')) {
+
+const existingUsers = ['testuser', 'admin'];
+
+window.checkStrength = function() {
+  const password = document.getElementById('password').value;
+  const bar = document.getElementById('strengthBar');
+  const fill = document.getElementById('strengthFill');
+  const label = document.getElementById('strengthLabel');
+  if (!password) { bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+  const levels = [
+    { width: '25%', color: '#e03030', text: 'Weak' },
+    { width: '50%', color: '#f08030', text: 'Fair' },
+    { width: '75%', color: '#f0d050', text: 'Good' },
+    { width: '100%', color: '#48b848', text: 'Strong' },
+  ];
+  const l = levels[Math.max(0, score - 1)];
+  fill.style.width = l.width;
+  fill.style.background = l.color;
+  label.textContent = l.text;
+  label.style.color = l.color;
+};
+
+window.handleRegister = function(e) {
+  e.preventDefault();
+  let valid = true;
+  const username = document.getElementById('username').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const confirm = document.getElementById('confirmPassword').value;
+  clearAll();
+
+  if (!username) { setError('username', 'usernameError', 'Username is required'); valid = false; }
+  else if (username.length < 3) { setError('username', 'usernameError', 'Username must be at least 3 characters'); valid = false; }
+  else { document.getElementById('username').classList.add('success'); }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email) { setError('email', 'emailError', 'Email is required'); valid = false; }
+  else if (!emailRegex.test(email)) { setError('email', 'emailError', 'Please enter a valid email address'); valid = false; }
+  else { document.getElementById('email').classList.add('success'); }
+
+  if (!password) { setError('password', 'passwordError', 'Password is required'); valid = false; }
+  else if (password.length < 8) { setError('password', 'passwordError', 'Password must be at least 8 characters'); valid = false; }
+  else { document.getElementById('password').classList.add('success'); }
+
+  if (!confirm) { setError('confirmPassword', 'confirmError', 'Please confirm your password'); valid = false; }
+  else if (confirm !== password) { setError('confirmPassword', 'confirmError', 'Passwords do not match'); valid = false; }
+  else { document.getElementById('confirmPassword').classList.add('success'); }
+
+  if (!valid) return;
+
+  // Send to backend register.php
+  fetch('register.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, email, password })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      document.getElementById('formState').style.display = 'none';
+      document.getElementById('successState').classList.add('show');
+    } else {
+      // Show server-side error
+      const el = document.getElementById('globalError');
+      el.textContent = data.message || 'Registration failed';
+      el.classList.add('show');
+    }
+  })
+  .catch(() => {
+    const el = document.getElementById('globalError');
+    el.textContent = 'Could not connect to server';
+    el.classList.add('show');
+  });
+};
+
+function setError(inputId, errorId, msg) {
+  document.getElementById(inputId).classList.add('error');
+  const el = document.getElementById(errorId);
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function clearAll() {
+  ['username', 'email', 'password', 'confirmPassword'].forEach(id => {
+    document.getElementById(id).classList.remove('error', 'success');
+  });
+  ['usernameError', 'emailError', 'passwordError', 'confirmError', 'globalError'].forEach(id => {
+    document.getElementById(id).classList.remove('show');
+  });
+}
+
+} // end registerForm guard
+
+// =============================================
+// AUTH NAV LINK — update Login/Logout on simulator page
+// =============================================
+if (document.getElementById('authLink')) {
+  fetch('check_session.php')
+    .then(r => r.json())
+    .then(data => {
+      const authLink = document.getElementById('authLink');
+      if (data.loggedIn) {
+        authLink.textContent = 'Logout';
+        authLink.href = 'logout.php';
+      }
+    })
+    .catch(() => {});
+}
+
+// =============================================
+// TAB SWITCHING — Simulator vs Ocean Doctor Game
+// =============================================
+function switchSimTab(tab) {
+  const simSection = document.getElementById('simulatorSection');
+  const gameSection = document.getElementById('gameSection');
+  const tabSim = document.getElementById('tabSimulator');
+  const tabGame = document.getElementById('tabGame');
+  if (!simSection || !gameSection) return;
+
+  if (tab === 'simulator') {
+    simSection.style.display = 'block';
+    gameSection.style.display = 'none';
+    tabSim.classList.add('active');
+    tabGame.classList.remove('active');
+  } else {
+    simSection.style.display = 'none';
+    gameSection.style.display = 'block';
+    tabSim.classList.remove('active');
+    tabGame.classList.add('active');
+    initGameSection();
+  }
+}
+
+// =============================================
+// OCEAN DOCTOR GAME — Canvas-based mini game
+// =============================================
+let oceanGameInitialized = false;
+
+function initGameSection() {
+  if (oceanGameInitialized) return;
+  oceanGameInitialized = true;
+
+  // Check if user is logged in
+  fetch('check_session.php')
+    .then(r => r.json())
+    .then(data => {
+      if (data.loggedIn) {
+        document.getElementById('gameArea').style.display = 'block';
+        document.getElementById('gameLoginMsg').style.display = 'none';
+      } else {
+        document.getElementById('gameArea').style.display = 'none';
+        document.getElementById('gameLoginMsg').style.display = 'flex';
+      }
+    })
+    .catch(() => {
+      document.getElementById('gameArea').style.display = 'none';
+      document.getElementById('gameLoginMsg').style.display = 'flex';
+    });
+}
+
+// Game state variables
+let gameCanvas, gameCtx;
+let gameRunning = false;
+let gameScore = 0;
+let gameLives = 3;
+let gameLevel = 1;
+let gameItems = [];
+let gameAnimFrame = null;
+let gameBubbles = [];
+let gameSpawnTimer = 0;
+let gameLevelTimer = 0;
+
+// Item types: trash (collectible) and marine life (avoid)
+const trashTypes = [
+  { emoji: '🥤', name: 'cup',    points: 10 },
+  { emoji: '🛍️', name: 'bag',    points: 10 },
+  { emoji: '🥫', name: 'can',    points: 15 },
+  { emoji: '🔋', name: 'battery',points: 20 },
+  { emoji: '👟', name: 'shoe',   points: 10 },
+  { emoji: '📦', name: 'box',    points: 15 }
+];
+const marineTypes = [
+  { emoji: '🐟', name: 'fish' },
+  { emoji: '🐠', name: 'tropical fish' },
+  { emoji: '🐢', name: 'turtle' },
+  { emoji: '🐙', name: 'octopus' },
+  { emoji: '🦀', name: 'crab' },
+  { emoji: '🐬', name: 'dolphin' }
+];
+
+function startGame() {
+  gameCanvas = document.getElementById('gameCanvas');
+  if (!gameCanvas) return;
+  gameCtx = gameCanvas.getContext('2d');
+
+  // Reset state
+  gameScore = 0;
+  gameLives = 3;
+  gameLevel = 1;
+  gameItems = [];
+  gameBubbles = [];
+  gameSpawnTimer = 0;
+  gameLevelTimer = 0;
+  gameRunning = true;
+
+  // Update HUD
+  updateHUD();
+
+  // Hide overlays
+  document.getElementById('gameStartOverlay').style.display = 'none';
+  document.getElementById('gameOverOverlay').style.display = 'none';
+
+  // Start game loop
+  if (gameAnimFrame) cancelAnimationFrame(gameAnimFrame);
+  lastTime = performance.now();
+  gameLoop(lastTime);
+}
+
+let lastTime = 0;
+
+function gameLoop(timestamp) {
+  if (!gameRunning) return;
+
+  const dt = Math.min((timestamp - lastTime) / 1000, 0.05); // delta in seconds, capped
+  lastTime = timestamp;
+
+  // Spawn items
+  gameSpawnTimer += dt;
+  const spawnRate = Math.max(0.4, 1.2 - (gameLevel * 0.08));
+  if (gameSpawnTimer >= spawnRate) {
+    gameSpawnTimer = 0;
+    spawnItem();
+  }
+
+  // Level up every 15 seconds
+  gameLevelTimer += dt;
+  if (gameLevelTimer >= 15) {
+    gameLevelTimer = 0;
+    gameLevel++;
+    document.getElementById('gameLevel').textContent = gameLevel;
+  }
+
+  // Spawn background bubbles
+  if (Math.random() < 0.03) {
+    gameBubbles.push({
+      x: Math.random() * gameCanvas.width,
+      y: gameCanvas.height + 10,
+      r: 2 + Math.random() * 6,
+      speed: 20 + Math.random() * 40,
+      opacity: 0.1 + Math.random() * 0.3
+    });
+  }
+
+  // Update
+  updateItems(dt);
+  updateBubbles(dt);
+
+  // Draw
+  drawGame();
+
+  gameAnimFrame = requestAnimationFrame(gameLoop);
+}
+
+function spawnItem() {
+  const isTrash = Math.random() < 0.65; // 65% trash, 35% marine life
+  const x = 30 + Math.random() * (gameCanvas.width - 60);
+  const speed = (40 + Math.random() * 30) + (gameLevel * 15);
+  const size = 32 + Math.random() * 16;
+
+  if (isTrash) {
+    const type = trashTypes[Math.floor(Math.random() * trashTypes.length)];
+    gameItems.push({ x, y: -size, size, speed, type: 'trash', emoji: type.emoji, points: type.points, wobble: Math.random() * Math.PI * 2 });
+  } else {
+    const type = marineTypes[Math.floor(Math.random() * marineTypes.length)];
+    gameItems.push({ x, y: -size, size, speed: speed * 0.8, type: 'marine', emoji: type.emoji, wobble: Math.random() * Math.PI * 2 });
+  }
+}
+
+function updateItems(dt) {
+  for (let i = gameItems.length - 1; i >= 0; i--) {
+    const item = gameItems[i];
+    item.y += item.speed * dt;
+    item.wobble += dt * 2;
+    item.x += Math.sin(item.wobble) * 0.5;
+
+    // Remove if off screen
+    if (item.y > gameCanvas.height + 50) {
+      if (item.type === 'trash') {
+        gameScore = Math.max(0, gameScore - 2);
+        updateHUD();
+      }
+      gameItems.splice(i, 1);
+    }
+  }
+}
+
+function updateBubbles(dt) {
+  for (let i = gameBubbles.length - 1; i >= 0; i--) {
+    gameBubbles[i].y -= gameBubbles[i].speed * dt;
+    gameBubbles[i].x += Math.sin(gameBubbles[i].y * 0.02) * 0.3;
+    if (gameBubbles[i].y < -20) gameBubbles.splice(i, 1);
+  }
+}
+
+function drawGame() {
+  const ctx = gameCtx;
+  const w = gameCanvas.width;
+  const h = gameCanvas.height;
+
+  // Ocean gradient background
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, '#0a4868');
+  grad.addColorStop(0.3, '#0c5a7a');
+  grad.addColorStop(0.7, '#084060');
+  grad.addColorStop(1, '#062a40');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Light rays
+  ctx.save();
+  ctx.globalAlpha = 0.04;
+  for (let i = 0; i < 5; i++) {
+    ctx.beginPath();
+    const rx = w * 0.15 + i * w * 0.18;
+    ctx.moveTo(rx - 20, 0);
+    ctx.lineTo(rx + 40, h);
+    ctx.lineTo(rx - 40, h);
+    ctx.closePath();
+    ctx.fillStyle = '#60C8E0';
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Bubbles
+  gameBubbles.forEach(b => {
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(96,200,224,${b.opacity})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // Items
+  gameItems.forEach(item => {
+    ctx.font = `${item.size}px serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(item.emoji, item.x, item.y);
+  });
+}
+
+function updateHUD() {
+  document.getElementById('gameScore').textContent = gameScore;
+  const heartsStr = '❤️'.repeat(Math.max(0, gameLives)) + '🖤'.repeat(Math.max(0, 3 - gameLives));
+  document.getElementById('gameLives').textContent = heartsStr;
+  document.getElementById('gameLevel').textContent = gameLevel;
+}
+
+function endGame() {
+  gameRunning = false;
+  if (gameAnimFrame) cancelAnimationFrame(gameAnimFrame);
+
+  document.getElementById('finalScore').textContent = gameScore;
+  document.getElementById('gameOverOverlay').style.display = 'flex';
+  document.getElementById('newAchievements').innerHTML = '';
+  document.getElementById('submitStatus').textContent = 'Submitting score...';
+
+  // Submit score to backend
+  fetch('submit_score.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ score: gameScore })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      document.getElementById('submitStatus').textContent = '✅ Score saved!';
+      // Show new achievements
+      if (data.newAchievements && data.newAchievements.length > 0) {
+        let achHtml = '<div class="game-achieve-title">🏅 New Achievements Unlocked!</div>';
+        data.newAchievements.forEach(a => {
+          achHtml += `<div class="game-achieve-item">${a.name}: ${a.desc}</div>`;
+        });
+        document.getElementById('newAchievements').innerHTML = achHtml;
+      }
+    } else {
+      document.getElementById('submitStatus').textContent = '⚠️ ' + (data.message || 'Failed to save score');
+    }
+  })
+  .catch(() => {
+    document.getElementById('submitStatus').textContent = '⚠️ Could not connect to server';
+  });
+}
+
+// Canvas click handler for game
+if (document.getElementById('gameCanvas')) {
+  document.getElementById('gameCanvas').addEventListener('click', function(e) {
+    if (!gameRunning) return;
+
+    const rect = gameCanvas.getBoundingClientRect();
+    const scaleX = gameCanvas.width / rect.width;
+    const scaleY = gameCanvas.height / rect.height;
+    const clickX = (e.clientX - rect.left) * scaleX;
+    const clickY = (e.clientY - rect.top) * scaleY;
+
+    // Check hits (reverse order so topmost items checked first)
+    for (let i = gameItems.length - 1; i >= 0; i--) {
+      const item = gameItems[i];
+      const dist = Math.sqrt((clickX - item.x) ** 2 + (clickY - item.y) ** 2);
+      if (dist < item.size * 0.7) {
+        if (item.type === 'trash') {
+          // Collected trash!
+          gameScore += item.points;
+          gameItems.splice(i, 1);
+          updateHUD();
+        } else {
+          // Hit marine life — lose a life
+          gameLives--;
+          gameItems.splice(i, 1);
+          updateHUD();
+          if (gameLives <= 0) {
+            endGame();
+          }
+        }
+        return; // Only hit one item per click
+      }
+    }
+  });
 }
