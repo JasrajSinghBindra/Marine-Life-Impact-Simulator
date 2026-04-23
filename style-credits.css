@@ -293,16 +293,3 @@ body {
     justify-content: center;
     margin-top: 40px;
 }
-
-#logoutBtn {
-  color: white !important;
-  background: rgba(255, 255, 255, 0.15) !important;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  padding: 4px 14px;
-  border-radius: 20px;
-  transition: background 0.2s ease;
-}
-
-#logoutBtn:hover {
-  background: rgba(255, 255, 255, 0.25) !important;
-}
